@@ -1,0 +1,4 @@
+org/wso2/non/regulated/ob/demo/backend/services/PaymentService.class
+org/wso2/non/regulated/ob/demo/backend/CommonConstants.class
+org/wso2/non/regulated/ob/demo/backend/services/BankAccountService.class
+org/wso2/non/regulated/ob/demo/backend/services/AccountService.class
