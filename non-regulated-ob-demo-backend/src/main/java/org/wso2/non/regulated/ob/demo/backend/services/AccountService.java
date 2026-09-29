@@ -176,7 +176,7 @@ public class AccountService {
                 "        \"AccountId\": \"" + accountId + "\",\n" +
                 "        \"Status\": \"Enabled\",\n" +
                 "        \"StatusUpdateDateTime\": \"2020-04-16T06:06:06+00:00\",\n" +
-                "        \"Currency\": \"EUR\",\n" +
+                "        \"Currency\": \"" + CommonConstants.CURRENCY + "\",\n" +
                 "        \"AccountCategory\": \"Personal\",\n" +
                 "        \"AccountTypeCode\": \"CACC\",\n" +
                 "        \"Nickname\": \"" + nickname + "\",\n" +
@@ -185,7 +185,7 @@ public class AccountService {
                 "          {\n" +
                 "            \"SchemeName\": \"BBAN\",\n" +
                 "            \"Identification\": \"" + accountId + "\",\n" +
-                "            \"Name\": \"Mr Kevin\",\n" +
+                "            \"Name\": \"Mr Devin\",\n" +
                 "            \"SecondaryIdentification\": \"00021\"\n" +
                 "          }\n" +
                 "        ]\n" +
@@ -205,7 +205,7 @@ public class AccountService {
                 "        \"TransactionReference\": \"Ref 1\",\n" +
                 "        \"Amount\": {\n" +
                 "          \"Amount\": \"10.00\",\n" +
-                "          \"Currency\": \"EUR\"\n" +
+                "          \"Currency\": \"" + CommonConstants.CURRENCY + "\"\n" +
                 "        },\n" +
                 "        \"CreditDebitIndicator\": \"Credit\",\n" +
                 "        \"Status\": \"BOOK\",\n" +
@@ -234,7 +234,7 @@ public class AccountService {
                 "        \"AccountId\": \"" + accountId + "\",\n" +
                 "        \"Amount\": {\n" +
                 "          \"Amount\": \"1230.00\",\n" +
-                "          \"Currency\": \"EUR\"\n" +
+                "          \"Currency\": \"" + CommonConstants.CURRENCY + "\"\n" +
                 "        },\n" +
                 "        \"CreditDebitIndicator\": \"Credit\",\n" +
                 "        \"Type\": \"ITAV\",\n" +

@@ -153,7 +153,7 @@ public class PaymentService {
     private static String creditorAccount() {
         return "        \"CreditorAccount\": {\n" +
                 "          \"SchemeName\": \"BBAN\",\n" +
-                "          \"Identification\": \"5500001122\",\n" +
+                "          \"Identification\": \"5500003344\",\n" +
                 "          \"Name\": \"Receiver Co\"\n" +
                 "        }\n";
     }
@@ -169,7 +169,7 @@ public class PaymentService {
                 "        \"EndToEndIdentification\": \"E2E123\",\n" +
                 "        \"InstructedAmount\": {\n" +
                 "          \"Amount\": \"100.00\",\n" +
-                "          \"Currency\": \"EUR\"\n" +
+                "          \"Currency\": \"" + CommonConstants.CURRENCY + "\"\n" +
                 "        },\n" +
                 creditorAccount();
     }
@@ -185,7 +185,7 @@ public class PaymentService {
                 "        \"RequestedExecutionDateTime\": \"2026-09-01T00:00:00+00:00\",\n" +
                 "        \"InstructedAmount\": {\n" +
                 "          \"Amount\": \"100.00\",\n" +
-                "          \"Currency\": \"EUR\"\n" +
+                "          \"Currency\": \"" + CommonConstants.CURRENCY + "\"\n" +
                 "        },\n" +
                 creditorAccount();
     }
@@ -204,7 +204,7 @@ public class PaymentService {
                 "        },\n" +
                 "        \"FirstPaymentAmount\": {\n" +
                 "          \"Amount\": \"50.00\",\n" +
-                "          \"Currency\": \"EUR\"\n" +
+                "          \"Currency\": \"" + CommonConstants.CURRENCY + "\"\n" +
                 "        },\n" +
                 creditorAccount();
     }
@@ -218,10 +218,10 @@ public class PaymentService {
     private static String internationalInitiation() {
         return "        \"InstructionIdentification\": \"ID412\",\n" +
                 "        \"EndToEndIdentification\": \"E2E123\",\n" +
-                "        \"CurrencyOfTransfer\": \"USD\",\n" +
+                "        \"CurrencyOfTransfer\": \"" + CommonConstants.CURRENCY_OF_TRANSFER + "\",\n" +
                 "        \"InstructedAmount\": {\n" +
                 "          \"Amount\": \"100.00\",\n" +
-                "          \"Currency\": \"EUR\"\n" +
+                "          \"Currency\": \"" + CommonConstants.CURRENCY + "\"\n" +
                 "        },\n" +
                 creditorAccount();
     }

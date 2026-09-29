@@ -36,4 +36,10 @@ public class CommonConstants {
     // Base URL the mock responses use to build their Links.Self values.
     public static final String SELF_LINK_BASE_URL = "https://api.alphabank.com/open-banking/v1.0";
 
+    // The currency the mock accounts, balances, transactions and instructed amounts are denominated in.
+    public static final String CURRENCY = "GBP";
+
+    // The currency an international payment is transferred in, i.e. what the creditor is paid in.
+    public static final String CURRENCY_OF_TRANSFER = "USD";
+
 }
