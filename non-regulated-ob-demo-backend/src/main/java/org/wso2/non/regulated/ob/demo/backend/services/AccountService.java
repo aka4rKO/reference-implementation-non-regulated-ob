@@ -48,8 +48,8 @@ public class AccountService {
     @Path("/accounts")
     @Produces("application/json; charset=utf-8")
     public Response getAccounts() {
-        String items = account(DEMO_ACCOUNT_1, nickname(DEMO_ACCOUNT_1))/* + ",\n"
-                + account(DEMO_ACCOUNT_2, nickname(DEMO_ACCOUNT_2))*/;
+        String items = account(DEMO_ACCOUNT_1, nickname(DEMO_ACCOUNT_1)) + ",\n"
+                + account(DEMO_ACCOUNT_2, nickname(DEMO_ACCOUNT_2));
         return wrap(envelope("Account", items, "/accounts"));
     }
 
