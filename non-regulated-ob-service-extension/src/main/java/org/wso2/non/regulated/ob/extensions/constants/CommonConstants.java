@@ -62,6 +62,12 @@ public class CommonConstants {
     public static final String TRANSACTIONS = "transactions";
     public static final String TO_BOOKING_DATE_TIME = "toBookingDateTime";
     public static final String FROM_BOOKING_DATE_TIME = "fromBookingDateTime";
+    public static final String DOMESTIC_PAYMENTS_PATH = "domestic-payments";
+    public static final String INTERNATIONAL_PAYMENTS_PATH = "international-payments";
+    public static final String SCHEDULED_PAYMENTS_PATH = "scheduled-payments";
+    public static final String STANDING_ORDERS_PATH = "standing-orders";
+    public static final String DOMESTIC_STANDING_ORDERS_PATH = "domestic-standing-orders";
+    public static final String INTERNATIONAL_PATH = "international";
 
     // Date-time formats accepted in addition to java.time's built-in ISO parser.
     public static final DateTimeFormatter BASIC_ISO_DATE_TIME = new DateTimeFormatterBuilder()

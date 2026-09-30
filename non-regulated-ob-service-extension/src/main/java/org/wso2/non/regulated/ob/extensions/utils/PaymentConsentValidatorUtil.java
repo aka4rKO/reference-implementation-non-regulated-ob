@@ -681,7 +681,7 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateInstructionIdentification(String requestPath, JSONObject submissionInitiation,
                                                                JSONObject consentInitiation, String requestId) {
 
-        if (requestPath.contains("standing-orders")) {
+        if (requestPath.contains(CommonConstants.STANDING_ORDERS_PATH)) {
             return SuccessResponseUtil.getSuccessResponse(requestId);
         }
 
@@ -707,7 +707,8 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateEndToEndIdentification(String requestPath, JSONObject submissionInitiation,
                                                             JSONObject consentInitiation, String requestId) {
 
-        if (StringUtils.containsAny(requestPath, "domestic-payments", "international-payments")) {
+        if (StringUtils.containsAny(requestPath, CommonConstants.DOMESTIC_PAYMENTS_PATH,
+                CommonConstants.INTERNATIONAL_PAYMENTS_PATH)) {
 
             JSONObject error = JsonValidationUtil.mandatoryMatchOrError(submissionInitiation, consentInitiation,
                     FieldNameConstants.END_TO_END_IDENTIFICATION,
@@ -716,7 +717,7 @@ public class PaymentConsentValidatorUtil {
             if (error != null) {
                 return error;
             }
-        } else if (requestPath.contains("scheduled-payments")) {
+        } else if (requestPath.contains(CommonConstants.SCHEDULED_PAYMENTS_PATH)) {
 
             boolean inSubmission = submissionInitiation.has(FieldNameConstants.END_TO_END_IDENTIFICATION);
             boolean inConsent = consentInitiation.has(FieldNameConstants.END_TO_END_IDENTIFICATION);
@@ -749,7 +750,7 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateInstructedAmount(String requestPath, JSONObject submissionInitiation,
                                                       JSONObject consentInitiation, String requestId) {
 
-        if (requestPath.contains("domestic-standing-orders")) {
+        if (requestPath.contains(CommonConstants.DOMESTIC_STANDING_ORDERS_PATH)) {
             return SuccessResponseUtil.getSuccessResponse(requestId);
         }
         if (!submissionInitiation.has(FieldNameConstants.INSTRUCTED_AMOUNT)) {
@@ -788,7 +789,7 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateRequestedExecutionDate(String requestPath, JSONObject submissionInitiation,
                                                             JSONObject consentInitiation, String requestId) {
 
-        if (!requestPath.contains("scheduled-payments")) {
+        if (!requestPath.contains(CommonConstants.SCHEDULED_PAYMENTS_PATH)) {
             return SuccessResponseUtil.getSuccessResponse(requestId);
         }
 
@@ -815,7 +816,7 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateFrequency(String requestPath, JSONObject submissionInitiation,
                                                JSONObject consentInitiation, String requestId) {
 
-        if (!requestPath.contains("standing-orders") ||
+        if (!requestPath.contains(CommonConstants.STANDING_ORDERS_PATH) ||
                 !submissionInitiation.has(FieldNameConstants.MANDATE_RELATED_INFORMATION)) {
             return SuccessResponseUtil.getSuccessResponse(requestId);
         }
@@ -873,7 +874,7 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateFirstPaymentDate(String requestPath, JSONObject submissionInitiation,
                                                       JSONObject consentInitiation, String requestId) {
 
-        if (!requestPath.contains("standing-orders") ||
+        if (!requestPath.contains(CommonConstants.STANDING_ORDERS_PATH) ||
                 !submissionInitiation.has(FieldNameConstants.MANDATE_RELATED_INFORMATION)) {
             return SuccessResponseUtil.getSuccessResponse(requestId);
         }
@@ -912,7 +913,7 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateCurrencyOfTransfer(String requestPath, JSONObject submissionInitiation,
                                                         JSONObject consentInitiation, String requestId) {
 
-        if (!requestPath.contains("international")) {
+        if (!requestPath.contains(CommonConstants.INTERNATIONAL_PATH)) {
             return SuccessResponseUtil.getSuccessResponse(requestId);
         }
 
@@ -940,7 +941,7 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateChargeBearer(String requestPath, JSONObject submissionInitiation,
                                                   JSONObject consentInitiation, String requestId) {
 
-        if (!requestPath.contains("international")) {
+        if (!requestPath.contains(CommonConstants.INTERNATIONAL_PATH)) {
             return SuccessResponseUtil.getSuccessResponse(requestId);
         }
 
@@ -969,7 +970,7 @@ public class PaymentConsentValidatorUtil {
     private static JSONObject validateDestinationCountryCode(String requestPath, JSONObject submissionInitiation,
                                                             JSONObject consentInitiation, String requestId) {
 
-        if (!requestPath.contains("international")) {
+        if (!requestPath.contains(CommonConstants.INTERNATIONAL_PATH)) {
             return SuccessResponseUtil.getSuccessResponse(requestId);
         }
 
