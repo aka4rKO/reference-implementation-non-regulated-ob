@@ -70,11 +70,11 @@ Base path: `/open-banking/{version}/payment-initiation`
 - **`GET` (check a payment's status):** these calls use a client token, which has no consent tied
   to it, so there's nothing to enforce against.
 
-### Endpoints that don't exist, on purpose
+### Endpoints that don't exist for the Payment Initiation API, on purpose 
 
-A payment consent is used up when the payment is submitted. As a result, two endpoints are left out:
-
-- **No consent `DELETE`.** Once the payment is submitted there's nothing long-lived left to revoke.
-  That's why `PreProcessConsentRevokeApiImpl` rejects payment consent types.
+- **No consent `DELETE`.** After submission there's no consent left to revoke, so
+  `PreProcessConsentRevokeApiImpl` rejects payment consent types. Scheduled payments and standing
+  orders keep running at the bank, and neither this API nor the bank's consent management portal can
+  cancel them. The customer cancels them with the bank directly.
 - **No funds confirmation.** Funds have to be checked when the payment is submitted anyway, so a
   separate funds check isn't offered. That check is up to the bank.
