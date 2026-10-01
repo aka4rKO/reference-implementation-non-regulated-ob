@@ -241,86 +241,22 @@ http_method = "all"
 secure = "true"
 ```
 
-**2. Consent settings**
+**2. Consent validation**
 
 ```toml
-[financial_services.consent.pre_initiated]
-scopes = []
-
-[financial_services.consent.scope_based]
-scopes = ["accounts"]
-
 [financial_services.consent.validation]
 signature.alias = "wso2am"   # API Manager's certificate, from step 3
 ```
 
-**3. Other settings**
+**3. Use Identity Server as API Manager's key manager**
 
-```toml
-[oauth.oidc]
-enable_claims_separation_for_access_tokens = false
+Follow the Identity Server steps in
+[Configure WSO2 IS 7 as a key manager](https://apim.docs.wso2.com/en/latest/api-security/key-management/third-party-key-managers/configure-wso2is7-connector/).
 
-[oauth.dcr]
-# Comment out this line:
-#enable_fapi_enforcement = true
+**4. Make Identity Server FAPI 2.0 compliant**
 
-[financial_services.app_registration.sca.authenticator_config]
-enable_setting_authenticators_on_app_update = false
-```
-
-**4. Use Identity Server as API Manager's key manager**
-
-```toml
-[oauth]
-authorize_all_scopes = true
-
-[[event_listener]]
-id = "token_revocation"
-type = "org.wso2.carbon.identity.core.handler.AbstractIdentityHandler"
-name = "org.wso2.is.notification.ApimOauthEventInterceptor"
-order = 1
-
-[event_listener.properties]
-notification_endpoint = "https://localhost:9443/internal/data/v1/notify"
-username = "${admin.username}"
-password = "${admin.password}"
-'header.X-WSO2-KEY-MANAGER' = "WSO2-IS"
-```
-
-Also download
-[`wso2is.notification.event.handlers-2.1.3.jar`](https://maven.wso2.org/nexus/content/repositories/releases/org/wso2/km/ext/wso2is/wso2is.notification.event.handlers/2.1.3/wso2is.notification.event.handlers-2.1.3.jar)
-into `<IS_HOME>/repository/components/dropins`.
-
-See [Configure WSO2 IS 7 as a key manager](https://apim.docs.wso2.com/en/latest/api-security/key-management/third-party-key-managers/configure-wso2is7-connector/).
-
-**5. Make Identity Server FAPI 2.0 compliant**
-
-```toml
-[oauth]
-timestamp_skew = 10
-
-[oauth.token_validation]
-authorization_code_validity = 50
-
-[oauth.oidc]
-fapi.version = "2"
-id_token.issuer = "https://$ref{server.hostname}:${carbon.management.port}/oauth2/oidcdiscovery"
-id_token.use_entityid_as_issuer = true
-
-[oauth.mutualtls]
-client_certificate_header = "x-wso2-mtls-cert"
-
-[transport.https.sslHostConfig.properties]
-ciphers = "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
-
-[myaccount.idp_configs]
-wellKnownEndpoint = "https://localhost:9446/oauth2/token/.well-known/openid-configuration"
-
-[console.idp_configs]
-wellKnownEndpoint = "https://localhost:9446/oauth2/token/.well-known/openid-configuration"
-```
-
-See [Register a FAPI-compliant app](https://is.docs.wso2.com/en/7.1.0/guides/applications/register-a-fapi-compliant-app/).
+Follow the FAPI 2.0 steps in
+[Register a FAPI-compliant app](https://is.docs.wso2.com/en/7.1.0/guides/applications/register-a-fapi-compliant-app/).
 
 ### API Manager
 
@@ -347,43 +283,19 @@ skip_list.sequences = ["customErrorFormatter.xml"]
 
 **3. Set up the TPP application fields**
 
-- Replace all the `[[financial_services.keymanager.application.type.attributes]]` blocks with
-  [`am-deployment-snippet.toml`](artifacts/devportal-km-configs/am-deployment-snippet.toml). This
-  adds the **JWKS URI** field to the Developer Portal.
-- Remove this block:
+Replace all the `[[financial_services.keymanager.application.type.attributes]]` blocks with
+[`am-deployment-snippet.toml`](artifacts/devportal-km-configs/am-deployment-snippet.toml). This adds
+the **JWKS URI** field to the Developer Portal, and the hidden FAPI 2.0 defaults described in the
+[README](README.md#tpp-application-settings).
 
-  ```toml
-  [financial_services.gateway.application_registration]
-  tls_client_certificate_bound_access_tokens = true
-  ```
-
-**4. Use Identity Server as the key manager**
-
-```toml
-[[apim.tenant_sharing]]
-type = "WSO2-IS-7"
-
-[apim.tenant_sharing.properties]
-identity_server_base_url = "https://localhost:9446"
-dcr_request_extension = "org.wso2.financial.services.accelerator.keymanager.extension.FSDCRRequestExtension"
-```
-
-See [Configure WSO2 IS 7 as a key manager](https://apim.docs.wso2.com/en/latest/api-security/key-management/third-party-key-managers/configure-wso2is7-connector/).
-
-**5. Other settings**
+**4. Other settings**
 
 ```toml
 [apim.key_manager]
 allow_subscription_validation_disabling = false
 
-[encryption]
-key = "<your key>"   # create one with: openssl rand -hex 32
-
 [transport.https.properties]
 maxHttpHeaderSize = "65536"
-
-[system.parameter]
-disableRoleValidationAtScopeCreation = "true"
 ```
 
 ## Step 7: Start the servers
@@ -397,25 +309,8 @@ Start Identity Server first, then API Manager:
 
 ## Step 8: Add the key manager
 
-This makes API Manager use Identity Server to issue and check tokens.
-
-1. Sign in to the Admin Portal at `https://localhost:9443/admin`.
-2. Go to **Key Managers** → **Add Key Manager**.
-3. Enter a name, and choose **fsKeyManager** as the type.
-4. Set the **Well-known URL** to
-   `https://localhost:9446/oauth2/token/.well-known/openid-configuration` and click **Import**.
-   This fills in most fields. Check that the **Issuer** is `https://localhost:9446/oauth2/token`.
-5. Under **Connector Configurations**, enter the Identity Server admin username and password.
-6. Set **Key Manager Permission** to **Public**.
-7. Under **Advanced Configuration**:
-   - tick **Token Generation**, **Out Of Band Provisioning** and **OAuth App Creation**
-   - set **Token Validation Method** to **Self Validate JWT**
-8. Click **Add**.
-9. Disable the **Resident Key Manager**.
-
-For every field, see
-[Configure IS as Key Manager](https://github.com/wso2/docs-open-banking/blob/master/en/docs/tryout-flows/accelerator-with-is-and-apim/configure-fskm.md)
-and [Configure WSO2 IS 7 as a key manager](https://apim.docs.wso2.com/en/latest/api-security/key-management/third-party-key-managers/configure-wso2is7-connector/).
+This makes API Manager use Identity Server to issue and check tokens. Follow the API Manager steps
+in [Configure WSO2 Financial Service Key Manager](https://ob.docs.wso2.com/en/latest/tryout-flows/accelerator-with-is-and-apim/configure-fskm/).
 
 ## Step 9: Turn on the approval workflow
 
@@ -434,29 +329,76 @@ again, use [`default-workflow-extensions.xml`](artifacts/workflow-extensions/def
 
 ## Step 10: Publish the APIs
 
-Do this for each API:
+### Create the policies
 
-| API | OpenAPI spec |
-|---|---|
-| Account Information | [`account-info-openapi.yaml`](artifacts/apis/accounts/account-info-openapi.yaml) |
-| Payment Initiation | [`payment-initiation-openapi.yaml`](artifacts/apis/payments/payment-initiation-openapi.yaml) |
+Do this once. The policy files are in
+`<APIM_HOME>/wso2-fsam-accelerator-4.0.0/repository/resources/mediation-policies`.
 
-1. Sign in to the Publisher at `https://localhost:9443/publisher`.
-2. Go to **REST API** → **Import Open API**, and upload the spec.
-3. Leave the endpoint empty, and click **Create**.
-4. Under **Endpoints**, choose **Dynamic Endpoints** and save.
-5. Under **Policies**, add these policies in this order:
+1. Sign in to the Publisher at `https://localhost:9443/publisher` and go to **Policies** →
+   **Add New Policy**.
+2. Create each policy below. For all three, set **Applicable Flows** to **Request** and
+   **Supported API Types** to **HTTP**, upload the policy file, and add the attributes.
 
-   | Policy | Where |
+| Policy | File | Attributes |
+|---|---|---|
+| MTLS Enforcement Policy | `mtlsEnforcementPolicy.j2` | `transportCertAsHeaderEnabled` (Boolean), `transportCertHeaderName` (String), `isClientCertificateEncoded` (Boolean). All optional. |
+| Consent Enforcement Policy | `consentEnforcementPolicy.j2` | `consentIdClaimName`, `consentServiceBasicAuthCredentials`, `consentServiceBaseUrl`. All required strings. |
+| Dynamic Endpoint Policy | `dynamicEndpointPolicy.j2` | `consentServiceRoutingRegexPattern`, `consentServiceBasicAuthCredentials`, `consentServiceBaseUrl`, `bankBackendBaseUrl`. All required strings. |
+
+For screenshots and every attribute's display name and description, see
+[Create Policies](https://ob.docs.wso2.com/en/latest/learn/create-policies/) and the
+[MTLS](https://ob.docs.wso2.com/en/latest/learn/mtls-enforcement-policy/),
+[Consent Enforcement](https://ob.docs.wso2.com/en/latest/learn/consent-enforcement-policy/) and
+[Dynamic Endpoint](https://ob.docs.wso2.com/en/latest/learn/dynamic-endpoint-policy/) policy pages.
+
+### Create and publish each API
+
+| API | OpenAPI spec | Context |
+|---|---|---|
+| Account Information | [`account-info-openapi.yaml`](artifacts/apis/accounts/account-info-openapi.yaml) | `/open-banking/{version}/account-information` |
+| Payment Initiation | [`payment-initiation-openapi.yaml`](artifacts/apis/payments/payment-initiation-openapi.yaml) | `/open-banking/{version}/payment-initiation` |
+
+1. In the Publisher, go to **REST API** → **Import Open API**, upload the spec and click **Next**.
+2. Set the **Context** from the table above and the **Version** to `v1.0`. Leave the
+   **Endpoint** empty, and click **Create**.
+3. Under **Endpoints**, choose **Dynamic Endpoints** and save.
+4. Under **Policies**, add these policies, in this order:
+
+   | Policy | Where | Values |
+   |---|---|---|
+   | MTLS Enforcement Policy | API level | Leave the attributes empty |
+   | JWT Claim Based Access Validator | Every operation | Claim `aut`. Value `APPLICATION_USER` on user-token operations, `APPLICATION` on client-token operations. |
+   | Consent Enforcement Policy | User-token operations only | See below |
+   | Dynamic Endpoint Policy | Every operation, always last | See below |
+
+   The [APIs README](artifacts/apis/README.md) lists which operations take which token.
+
+   **Consent Enforcement Policy** values:
+
+   | Attribute | Value |
    |---|---|
-   | mTLS | Every endpoint |
-   | JWT claim based access | Every endpoint. Use the claim `aut`, with `APPLICATION_USER` for user-token endpoints and `APPLICATION` for client-token endpoints. |
-   | Consent enforcement | User-token endpoints only |
-   | Dynamic endpoint | Every endpoint, always last |
+   | `consentIdClaimName` | `consent_id` |
+   | `consentServiceBasicAuthCredentials` | `aXNfYWRtaW5Ad3NvMi5jb206d3NvMjEyMw==` (`is_admin@wso2.com:wso2123` in base64) |
+   | `consentServiceBaseUrl` | `https://localhost:9446` |
 
-   The [APIs README](artifacts/apis/README.md) lists which endpoints take which token.
+   **Dynamic Endpoint Policy** values:
 
-6. Deploy the API, then go to **Overview** and click **Publish**.
+   | Attribute | Account Information | Payment Initiation |
+   |---|---|---|
+   | `consentServiceRoutingRegexPattern` | `.*\/consents.*` | `.*\/consents.*` |
+   | `bankBackendBaseUrl` | `https://localhost:9443/non/regulated/ob/demo/backend/services/accounts/accountservice` | `https://localhost:9443/non/regulated/ob/demo/backend/services/payments/paymentservice` |
+   | `consentServiceBaseUrl` | `https://localhost:9446` | `https://localhost:9446` |
+   | `consentServiceBasicAuthCredentials` | Same as above | Same as above |
+
+   Requests whose path matches the regex go to the accelerator's consent service. Everything else
+   goes to the demo bank. For Account Information, that sends `DELETE /consents/{ConsentId}` to the
+   consent service. The Payment Initiation API uses the same regex. It has no consent endpoints,
+   so nothing matches it and every call goes to the demo bank.
+
+   For credentials other than the default, create the value with
+   `printf 'user:password' | base64`.
+
+5. Click **Save and Deploy**, then go to **Overview** and click **Publish**.
 
 ## Step 11: Register the RAR types in Identity Server
 
@@ -475,15 +417,16 @@ See the [scripts README](artifacts/rar-schemas/scripts/README.md) for details.
 
 ## Step 12: Onboard the TPP
 
-Now act as the TPP. Each request below needs approval, so after each one, sign in to the Admin
-Portal (`https://localhost:9443/admin`) and approve it under **Tasks**.
+Now act as the TPP. Each request below needs approval. After each one, sign in to the Admin Portal
+(`https://localhost:9443/admin`) and approve it under **Tasks**.
 
-1. Go to the Developer Portal at `https://localhost:9443/devportal`, create an account and sign in.
+1. **Sign up.** Go to the Developer Portal at `https://localhost:9443/devportal` and create an
+   account. Approve it under **Tasks** → **User Creation**. Then sign in as the TPP.
 2. **Create an application.** Approve it under **Tasks** → **Application Creation**.
 3. **Subscribe** the application to both APIs. Approve them under **Tasks** →
    **Subscription Creation**.
 4. **Generate keys.** Open the application, go to **Production Keys**, and enter:
-   - **Grant types:** Code and Client Credentials
+   - **Grant types:** Code, Client Credentials and Refresh Token
    - **Callback URL:** `https://www.google.com`
    - **JWKS URI:** `http://localhost:8000/jwks.json`, from step 4
 
