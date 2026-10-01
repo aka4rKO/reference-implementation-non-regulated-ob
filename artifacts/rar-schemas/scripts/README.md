@@ -9,7 +9,7 @@ In this repo, consents are sent as `authorization_details`, using
 The two scripts here tell IS about our types:
 
 1. **`register.sh`** registers the types in IS.
-2. **`authorize-app.sh`** allows an application to use them.
+2. **`authorize-app.sh`** allows a client application to use them.
 
 For background, see the [WSO2 RAR guide](https://is.docs.wso2.com/en/next/guides/authorization/rich-authorization-requests/).
 
@@ -34,7 +34,7 @@ rar-schemas/
     types.json         groups the types into the two API resources, and gives each type
                        its name, description and schema file
     register.sh        step 1: registers the API resources
-    authorize-app.sh   step 2: authorizes an application to use them
+    authorize-app.sh   step 2: authorizes a client application to use them
     README.md
 ```
 
@@ -66,27 +66,27 @@ How it works:
 - `verify` reads `GET /oauth2/token/.well-known/openid-configuration` and prints its
   `authorization_details_types_supported` list.
 
-## Step 2: Authorize your application
+## Step 2: Authorize your client application
 
-Registering the types makes IS aware of them, but an application still can't request
+Registering the types makes IS aware of them, but a client application still can't request
 `authorization_details` for them until you authorize it. **Run step 1 first.** This step depends on
 the API resources already existing.
 
 ```bash
 ./authorize-app.sh print                               # dry run: shows the request bodies
-APP_ID=<application-id> ./authorize-app.sh authorize   # authorizes the app
+APP_ID=<application-id> ./authorize-app.sh authorize   # authorizes the client application
 ```
 
 `print` doesn't change anything, but it still contacts IS to look up the API resource IDs, so IS
 must be running and step 1 must be done.
 
-`APP_ID` is required for `authorize`. It's the application's ID in WSO2 IS. You can find it:
+`APP_ID` is required for `authorize`. It's the client application's ID in WSO2 IS. You can find it:
 
-- in the Console URL when you open the application, or
+- in the Console URL when you open the client application, or
 - with `GET /api/server/v1/applications?filter=name+eq+<app-name>`
 
 How it works: the script looks up each API resource's ID by its identifier (from `types.json`). It
-then authorizes the application for **both** API resources in one run, with the `RBAC` policy and
+then authorizes the client application for **both** API resources in one run, with the `RBAC` policy and
 all of each resource's types. It does this through
 `POST /api/server/v1/applications/{applicationId}/authorized-apis` (the Application Management
 REST API).
@@ -99,7 +99,7 @@ Both scripts read these environment variables:
 |---|---|---|
 | `IS_HOST` | `https://localhost:9443` | IS base URL |
 | `IS_AUTH` | `admin:admin` | Basic auth as `user:password` |
-| `APP_ID` | *(none)* | Application to authorize. Required for `authorize-app.sh authorize` |
+| `APP_ID` | *(none)* | Client application to authorize. Required for `authorize-app.sh authorize` |
 
 The scripts call `curl` with `-k`, so they skip TLS certificate checks. That lets them work against
 a local IS with a self-signed certificate.

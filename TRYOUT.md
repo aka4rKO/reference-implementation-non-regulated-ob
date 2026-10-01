@@ -10,7 +10,7 @@ flow. For what's in the repo, see the [README](README.md).
   1. [Set up API Manager and Identity Server](#step-1-set-up-api-manager-and-identity-server)
   2. [Set up the accelerators](#step-2-set-up-the-accelerators)
   3. [Exchange certificates between the servers](#step-3-exchange-certificates-between-the-servers)
-  4. [Create the TPP's keys and certificates](#step-4-create-the-tpps-keys-and-certificates)
+  4. [Create the client application's keys and certificates](#step-4-create-the-client-applications-keys-and-certificates)
   5. [Build and deploy the webapps](#step-5-build-and-deploy-the-webapps)
   6. [Add the configuration](#step-6-add-the-configuration): [Identity Server](#identity-server),
      [API Manager](#api-manager)
@@ -20,9 +20,9 @@ flow. For what's in the repo, see the [README](README.md).
   9. [Turn on the approval workflow](#step-9-turn-on-the-approval-workflow)
   10. [Publish the APIs](#step-10-publish-the-apis)
   11. [Register the RAR types in Identity Server](#step-11-register-the-rar-types-in-identity-server)
-- **Onboard the TPP and call the APIs**
-  12. [Onboard the TPP](#step-12-onboard-the-tpp)
-  13. [Let the application use the RAR types](#step-13-let-the-application-use-the-rar-types)
+- **Onboard the client application and call the APIs**
+  12. [Onboard the client application](#step-12-onboard-the-client-application)
+  13. [Let the client application use the RAR types](#step-13-let-the-client-application-use-the-rar-types)
   14. [Call the APIs](#step-14-call-the-apis)
 
 ## Before you start
@@ -144,23 +144,23 @@ step 6).
 If you use a hostname other than `localhost`, put it in `CN=` and `san=dns:`. For JKS files,
 `keytool` warns that the format is proprietary. You can ignore that.
 
-## Step 4: Create the TPP's keys and certificates
+## Step 4: Create the client application's keys and certificates
 
-The TPP (the third-party app calling the APIs) needs two key pairs:
+The client application (the third-party app calling the APIs) needs two key pairs:
 
-- **Signing:** signs the TPP's JWTs. Identity Server checks them with the TPP's public keys, which
-  it reads from the TPP's JWKS URL.
+- **Signing:** signs the client application's JWTs. Identity Server checks them with the client
+  application's public keys, which it reads from its JWKS URL.
 - **Transport:** the client certificate for mTLS.
 
-> **For testing only.** These certificates are self-signed. A real TPP needs certificates issued by
+> **For testing only.** These certificates are self-signed. A real client application needs certificates issued by
 > a trusted certificate authority.
 
 1. Create the keys and certificates in a folder of your choice:
 
    ```bash
-   openssl req -x509 -newkey rsa:2048 -nodes -days 365 -subj "/CN=tpp-signing" \
+   openssl req -x509 -newkey rsa:2048 -nodes -days 365 -subj "/CN=client-signing" \
      -keyout signing.key -out signing.pem
-   openssl req -x509 -newkey rsa:2048 -nodes -days 365 -subj "/CN=tpp-transport" \
+   openssl req -x509 -newkey rsa:2048 -nodes -days 365 -subj "/CN=client-transport" \
      -keyout transport.key -out transport.pem
    ```
 
@@ -171,7 +171,7 @@ The TPP (the third-party app calling the APIs) needs two key pairs:
    node -e '
    const c = require("crypto"), fs = require("fs");
    const key = c.createPrivateKey(fs.readFileSync("signing.key"));
-   const meta = { kid: "tpp-signing-key", alg: "PS256", use: "sig" };
+   const meta = { kid: "client-signing-key", alg: "PS256", use: "sig" };
    fs.writeFileSync("jwk.json", JSON.stringify({ ...key.export({ format: "jwk" }), ...meta }));
    fs.writeFileSync("jwks.json", JSON.stringify({ keys: [{ ...c.createPublicKey(key).export({ format: "jwk" }), ...meta }] }, null, 2));
    '
@@ -183,14 +183,14 @@ The TPP (the third-party app calling the APIs) needs two key pairs:
    python3 -m http.server 8000
    ```
 
-   The TPP's JWKS URL is now `http://localhost:8000/jwks.json`.
+   The client application's JWKS URL is now `http://localhost:8000/jwks.json`.
 
 4. Make both servers trust the transport certificate. Do this **before** you start the servers:
 
    ```bash
-   keytool -import -noprompt -trustcacerts -alias tpp-transport -file transport.pem \
+   keytool -import -noprompt -trustcacerts -alias client-transport -file transport.pem \
      -keystore <APIM_HOME>/repository/resources/security/client-truststore.jks -storepass wso2carbon
-   keytool -import -noprompt -trustcacerts -alias tpp-transport -file transport.pem \
+   keytool -import -noprompt -trustcacerts -alias client-transport -file transport.pem \
      -keystore <IS_HOME>/repository/resources/security/client-truststore.p12 -storepass wso2carbon
    ```
 
@@ -207,7 +207,7 @@ cp "non-regulated-ob-demo-backend/target/non#regulated#ob#demo#backend.war" \
 ```
 
 - The **service extension** goes to Identity Server. The accelerator calls it at each consent step.
-- The **demo backend** goes to API Manager. It is the mock bank the APIs route to.
+- The **demo backend** goes to API Manager. It is the bank the APIs route to.
 
 ## Step 6: Add the configuration
 
@@ -281,12 +281,12 @@ to `<APIM_HOME>/repository/deployment/server/synapse-configs/default/sequences/`
 skip_list.sequences = ["customErrorFormatter.xml"]
 ```
 
-**3. Set up the TPP application fields**
+**3. Set up the client application fields**
 
 Replace all the `[[financial_services.keymanager.application.type.attributes]]` blocks with
 [`am-deployment-snippet.toml`](artifacts/devportal-km-configs/am-deployment-snippet.toml). This adds
 the **JWKS URI** field to the Developer Portal, and the hidden FAPI 2.0 defaults described in the
-[README](README.md#tpp-application-settings).
+[README](README.md#client-application-settings).
 
 **4. Other settings**
 
@@ -314,7 +314,8 @@ in [Configure WSO2 Financial Service Key Manager](https://ob.docs.wso2.com/en/la
 
 ## Step 9: Turn on the approval workflow
 
-With approval on, the bank approves each TPP application, subscription and key request.
+With approval on, a bank admin approves each developer sign-up, client application, subscription
+and key request.
 
 1. Sign in to the Carbon Console at `https://localhost:9443/carbon`.
 2. Go to **Main** → **Registry** → **Browse**.
@@ -391,9 +392,9 @@ For screenshots and every attribute's display name and description, see
    | `consentServiceBasicAuthCredentials` | Same as above | Same as above |
 
    Requests whose path matches the regex go to the accelerator's consent service. Everything else
-   goes to the demo bank. For Account Information, that sends `DELETE /consents/{ConsentId}` to the
+   goes to the demo bank backend. For Account Information, that sends `DELETE /consents/{ConsentId}` to the
    consent service. The Payment Initiation API uses the same regex. It has no consent endpoints,
-   so nothing matches it and every call goes to the demo bank.
+   so nothing matches it and every call goes to the demo bank backend.
 
    For credentials other than the default, create the value with
    `printf 'user:password' | base64`.
@@ -415,28 +416,29 @@ export IS_AUTH='is_admin@wso2.com:wso2123'
 
 See the [scripts README](artifacts/rar-schemas/scripts/README.md) for details.
 
-## Step 12: Onboard the TPP
+## Step 12: Onboard the client application
 
-Now act as the TPP. Each request below needs approval. After each one, sign in to the Admin Portal
-(`https://localhost:9443/admin`) and approve it under **Tasks**.
+Now act as the client application's developer. Each request below needs approval. After each one,
+sign in to the Admin Portal (`https://localhost:9443/admin`) as the bank admin and approve it under
+**Tasks**.
 
 1. **Sign up.** Go to the Developer Portal at `https://localhost:9443/devportal` and create an
-   account. Approve it under **Tasks** → **User Creation**. Then sign in as the TPP.
-2. **Create an application.** Approve it under **Tasks** → **Application Creation**.
-3. **Subscribe** the application to both APIs. Approve them under **Tasks** →
+   account. Approve it under **Tasks** → **User Creation**. Then sign in as the developer.
+2. **Create the client application.** Approve it under **Tasks** → **Application Creation**.
+3. **Subscribe** the client application to both APIs. Approve them under **Tasks** →
    **Subscription Creation**.
-4. **Generate keys.** Open the application, go to **Production Keys**, and enter:
+4. **Generate keys.** Open the client application, go to **Production Keys**, and enter:
    - **Grant types:** Code, Client Credentials and Refresh Token
    - **Callback URL:** `https://www.google.com`
    - **JWKS URI:** `http://localhost:8000/jwks.json`, from step 4
 
    Click **Generate Keys**. Approve it under **Tasks** → **Application Registration**.
-5. Copy the **Consumer Key**. This is the TPP's `client_id`.
+5. Copy the **Consumer Key**. This is the client application's `client_id`.
 
-## Step 13: Let the application use the RAR types
+## Step 13: Let the client application use the RAR types
 
-1. Find the application's ID in Identity Server. Sign in to the Console at
-   `https://localhost:9446/console`, open the application, and copy the ID from the URL.
+1. Find the client application's ID in Identity Server. Sign in to the Console at
+   `https://localhost:9446/console`, open the client application, and copy the ID from the URL.
 2. Authorize it:
 
    ```bash
@@ -449,7 +451,7 @@ Now act as the TPP. Each request below needs approval. After each one, sign in t
 
 ## Step 14: Call the APIs
 
-1. **Create a bank customer.** In the Identity Server Console, go to **User Management** →
+1. **Create a customer.** In the Identity Server Console, go to **User Management** →
    **Users** → **Add User**. You sign in as this user to approve consents.
 2. **Import** [the Postman collection](artifacts/postman-script) into Postman.
 3. **Set up Postman:**
@@ -462,14 +464,14 @@ Now act as the TPP. Each request below needs approval. After each one, sign in t
    | Variable | Value |
    |---|---|
    | `client_id` | The Consumer Key from step 12 |
-   | `kid` | `tpp-signing-key` |
+   | `kid` | `client-signing-key` |
    | `jwk` | The contents of `jwk.json` from step 4 |
    | `pmlib_code` | The contents of [this JWT signing library](https://joolfe.github.io/postman-util-lib/dist/bundle.js) |
 
 5. **Run the requests.** Run folder `0` once to get a client token. Then run each other folder's
    requests in order:
    1. **PAR** sends the consent.
-   2. **Authorize** gives you a URL. Open it in a browser, sign in as the bank customer and approve
+   2. **Authorize** gives you a URL. Open it in a browser, sign in as the customer and approve
       the consent. You're sent to `https://www.google.com/?code=...`. Copy the `code` into the
       folder's `<type>_code` variable.
    3. **Token Exchange** swaps the code for an access token.
