@@ -15,6 +15,19 @@ Consents are sent as [Rich Authorization Requests](https://datatracker.ietf.org/
 
 **Want to run it?** Follow the [tryout guide](TRYOUT.md).
 
+## Actors
+
+These docs use the terms in the first column. Other standards use different names for the same
+actors.
+
+| Actor | What they do | Also called |
+|---|---|---|
+| **Customer** | Owns the bank accounts. Signs in at the bank and approves or rejects each consent. | PSU, payment service user (UK, Berlin Group); consumer (Australia, FDX); end user |
+| **Client application** | The third-party app that calls the APIs for the customer. It asks for consent, then reads account data or makes payments. | TPP, third-party provider; AISP and PISP (UK, Berlin Group); data recipient (Australia, FDX); API consumer |
+| **Client application's developer** | The company or person that builds the client application. Signs up in the Developer Portal, creates the application, subscribes it to the APIs and generates its keys. | TPP (the organisation); subscriber (API Manager) |
+| **Bank** | Holds the customer's accounts and runs the APIs. In this repo, the [demo bank backend](non-regulated-ob-demo-backend) stands in for it. | ASPSP, account servicing payment service provider (UK, Berlin Group); data holder (Australia); data provider (FDX); financial institution |
+| **Bank admin** | Works for the bank. Approves developer sign-ups, client applications, subscriptions and keys in the API Manager Admin Portal. | Administrator |
+
 ## Products
 
 | Product | Version |
