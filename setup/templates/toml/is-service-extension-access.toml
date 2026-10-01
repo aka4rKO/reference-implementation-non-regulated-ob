@@ -1,0 +1,6 @@
+# Added by setup: lets the accelerator call this repo's service extension with Basic auth.
+[[resource.access_control]]
+allowed_auth_handlers = ["BasicAuthentication"]
+context = "(.*)/non/regulated/ob/service/extension/(.*)"
+http_method = "all"
+secure = "true"

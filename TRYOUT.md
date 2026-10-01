@@ -3,6 +3,8 @@
 This guide sets up everything on one machine and takes you through a full Accounts and Payments
 flow. For what's in the repo, see the [README](README.md).
 
+To do all of this automatically, use the [automated setup](setup/README.md) instead.
+
 ## Contents
 
 - [Before you start](#before-you-start)

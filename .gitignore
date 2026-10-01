@@ -37,3 +37,7 @@ target
 
 #mac
 .DS_Store
+
+# setup scripts: local settings and generated state
+setup/setup.env
+setup/.state/

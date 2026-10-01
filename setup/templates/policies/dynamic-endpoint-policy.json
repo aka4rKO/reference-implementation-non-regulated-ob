@@ -1,0 +1,50 @@
+{
+  "category": "Mediation",
+  "version": "v1",
+  "applicableFlows": [
+    "request"
+  ],
+  "supportedGateways": [
+    "Synapse"
+  ],
+  "supportedApiTypes": [
+    "HTTP"
+  ],
+  "name": "DynamicEndpointPolicy",
+  "displayName": "Dynamic Endpoint Policy",
+  "description": "Policy to determine the backend of the request",
+  "policyAttributes": [
+    {
+      "name": "consentServiceRoutingRegexPattern",
+      "displayName": "Consent Service Routing Regex Pattern",
+      "description": "Requests whose path matches this regex go to the consent service",
+      "type": "String",
+      "allowedValues": [],
+      "required": true
+    },
+    {
+      "name": "consentServiceBasicAuthCredentials",
+      "displayName": "Consent Service Basic Auth Credentials",
+      "description": "Base64 of admin-username:admin-password for the consent service",
+      "type": "String",
+      "allowedValues": [],
+      "required": true
+    },
+    {
+      "name": "consentServiceBaseUrl",
+      "displayName": "Consent Service Base URL",
+      "description": "Base URL of the consent service",
+      "type": "String",
+      "allowedValues": [],
+      "required": true
+    },
+    {
+      "name": "bankBackendBaseUrl",
+      "displayName": "Bank Backend Base URL",
+      "description": "Base URL of the bank backend",
+      "type": "String",
+      "allowedValues": [],
+      "required": true
+    }
+  ]
+}

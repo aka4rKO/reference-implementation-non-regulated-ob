@@ -13,7 +13,8 @@ It covers two APIs:
 Consents are sent as [Rich Authorization Requests](https://datatracker.ietf.org/doc/html/rfc9396)
 (`authorization_details`).
 
-**Want to run it?** Follow the [tryout guide](TRYOUT.md).
+**Want to run it?** Let the [automated setup](setup/README.md) do it, or follow the
+[tryout guide](TRYOUT.md) step by step.
 
 ## Actors
 

@@ -1,0 +1,42 @@
+{
+  "category": "Mediation",
+  "version": "v1",
+  "applicableFlows": [
+    "request"
+  ],
+  "supportedGateways": [
+    "Synapse"
+  ],
+  "supportedApiTypes": [
+    "HTTP"
+  ],
+  "name": "ConsentEnforcementPolicy",
+  "displayName": "Consent Enforcement Policy",
+  "description": "Policy to validate the consent",
+  "policyAttributes": [
+    {
+      "name": "consentIdClaimName",
+      "displayName": "Consent ID Claim Name",
+      "description": "The claim on the user access token that holds the consent ID",
+      "type": "String",
+      "allowedValues": [],
+      "required": true
+    },
+    {
+      "name": "consentServiceBasicAuthCredentials",
+      "displayName": "Consent Service Basic Auth Credentials",
+      "description": "Base64 of admin-username:admin-password for the consent service",
+      "type": "String",
+      "allowedValues": [],
+      "required": true
+    },
+    {
+      "name": "consentServiceBaseUrl",
+      "displayName": "Consent Service Base URL",
+      "description": "Base URL of the consent service",
+      "type": "String",
+      "allowedValues": [],
+      "required": true
+    }
+  ]
+}

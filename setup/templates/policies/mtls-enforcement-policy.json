@@ -1,0 +1,42 @@
+{
+  "category": "Mediation",
+  "version": "v1",
+  "applicableFlows": [
+    "request"
+  ],
+  "supportedGateways": [
+    "Synapse"
+  ],
+  "supportedApiTypes": [
+    "HTTP"
+  ],
+  "name": "MTLSEnforcementPolicy",
+  "displayName": "MTLS Enforcement Policy",
+  "description": "Policy to enforce MTLS validation",
+  "policyAttributes": [
+    {
+      "name": "transportCertAsHeaderEnabled",
+      "displayName": "Is the Transport Certificate Present as a Header in the Request?",
+      "description": "Whether the transport certificate is sent as a header in the request",
+      "type": "Boolean",
+      "allowedValues": [],
+      "required": false
+    },
+    {
+      "name": "transportCertHeaderName",
+      "displayName": "Transport Certificate Header Name",
+      "description": "The name of the transport certificate header",
+      "type": "String",
+      "allowedValues": [],
+      "required": false
+    },
+    {
+      "name": "isClientCertificateEncoded",
+      "displayName": "Is the Transport Certificate Present as a Header in the Request Encoded?",
+      "description": "Whether the transport certificate sent as a header is encoded",
+      "type": "Boolean",
+      "allowedValues": [],
+      "required": false
+    }
+  ]
+}

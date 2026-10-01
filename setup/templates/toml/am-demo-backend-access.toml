@@ -1,0 +1,5 @@
+# Added by setup: the demo bank backend is reached without login.
+[[resource.access_control]]
+context = "(.*)/non/regulated/ob/demo/backend/(.*)"
+http_method = "all"
+secure = "false"

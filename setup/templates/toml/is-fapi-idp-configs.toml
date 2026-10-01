@@ -1,0 +1,6 @@
+# Added by setup (FAPI 2.0): Console and My Account use the token well-known endpoint.
+[myaccount.idp_configs]
+wellKnownEndpoint = "https://@OB_HOST@:9446/oauth2/token/.well-known/openid-configuration"
+
+[console.idp_configs]
+wellKnownEndpoint = "https://@OB_HOST@:9446/oauth2/token/.well-known/openid-configuration"
