@@ -22,10 +22,11 @@ To do all of this automatically, use the [automated setup](setup/README.md) inst
   9. [Turn on the approval workflow](#step-9-turn-on-the-approval-workflow)
   10. [Publish the APIs](#step-10-publish-the-apis)
   11. [Register the RAR types in Identity Server](#step-11-register-the-rar-types-in-identity-server)
+  12. [Give the admin access to the consent APIs](#step-12-give-the-admin-access-to-the-consent-apis)
 - **Onboard the client application and call the APIs**
-  12. [Onboard the client application](#step-12-onboard-the-client-application)
-  13. [Let the client application use the RAR types](#step-13-let-the-client-application-use-the-rar-types)
-  14. [Call the APIs](#step-14-call-the-apis)
+  13. [Onboard the client application](#step-13-onboard-the-client-application)
+  14. [Let the client application use the RAR types](#step-14-let-the-client-application-use-the-rar-types)
+  15. [Call the APIs](#step-15-call-the-apis)
 
 ## Before you start
 
@@ -260,6 +261,16 @@ Follow the Identity Server steps in
 Follow the FAPI 2.0 steps in
 [Register a FAPI-compliant app](https://is.docs.wso2.com/en/7.1.0/guides/applications/register-a-fapi-compliant-app/).
 
+**5. Allow basic authentication only on the endpoints that need it**
+
+```toml
+[compatibility_setting.basic_auth.disable_basic_auth]
+default_value = "true"
+
+[compatibility_setting.basic_auth.allowed_endpoints]
+default_value = "(/t/[^/]+)?/api/fs/consent/.*, (/t/[^/]+)?/non/regulated/ob/service/extension/.*, (/t/[^/]+)?/api/identity/oauth2/dcr/v1[.]1/register.*, (/t/[^/]+)?/api/identity/oauth2/v1[.]0/scopes.*, (/t/[^/]+)?/api/server/v1/applications.*, (/t/[^/]+)?/api/server/v1/api-resources.*, (/t/[^/]+)?/scim2/users.*, (/t/[^/]+)?/scim2/v2/roles.*, (/t/[^/]+)?/oauth2/introspect"
+```
+
 ### API Manager
 
 File: `<APIM_HOME>/repository/conf/deployment.toml`
@@ -281,6 +292,14 @@ to `<APIM_HOME>/repository/deployment/server/synapse-configs/default/sequences/`
 ```toml
 [apim.sync_runtime_artifacts.gateway]
 skip_list.sequences = ["customErrorFormatter.xml"]
+```
+
+Then make the gateway use it. In
+`<APIM_HOME>/repository/deployment/server/synapse-configs/default/sequences/_cors_request_handler_.xml`,
+add this line just before the closing `</sequence>` tag:
+
+```xml
+<sequence key="customErrorFormatter"/>
 ```
 
 **3. Set up the client application fields**
@@ -313,6 +332,14 @@ Start Identity Server first, then API Manager:
 
 This makes API Manager use Identity Server to issue and check tokens. Follow the API Manager steps
 in [Configure WSO2 Financial Service Key Manager](https://ob.docs.wso2.com/en/latest/tryout-flows/accelerator-with-is-and-apim/configure-fskm/).
+
+When you add it, set these from Identity Server's discovery document,
+`https://localhost:9446/oauth2/token/.well-known/openid-configuration`:
+
+- **Issuer**: its `issuer`, `https://localhost:9446/oauth2/oidcdiscovery`.
+- **Grant Types**: every grant type under `grant_types_supported`.
+
+Skip the page's last step, **Disable the Resident Key Manager**.
 
 ## Step 9: Turn on the approval workflow
 
@@ -365,7 +392,9 @@ For screenshots and every attribute's display name and description, see
 2. Set the **Context** from the table above and the **Version** to `v1.0`. Leave the
    **Endpoint** empty, and click **Create**.
 3. Under **Endpoints**, choose **Dynamic Endpoints** and save.
-4. Under **Policies**, add these policies, in this order:
+4. Under **API Configurations** → **Runtime**, turn on **Schema Validation** and save. The gateway
+   then checks each request and response against the OpenAPI spec.
+5. Under **Policies**, add these policies, in this order:
 
    | Policy | Where | Values |
    |---|---|---|
@@ -401,7 +430,7 @@ For screenshots and every attribute's display name and description, see
    For credentials other than the default, create the value with
    `printf 'user:password' | base64`.
 
-5. Click **Save and Deploy**, then go to **Overview** and click **Publish**.
+6. Click **Save and Deploy**, then go to **Overview** and click **Publish**.
 
 ## Step 11: Register the RAR types in Identity Server
 
@@ -418,7 +447,18 @@ export IS_AUTH='is_admin@wso2.com:wso2123'
 
 See the [scripts README](artifacts/rar-schemas/scripts/README.md) for details.
 
-## Step 12: Onboard the client application
+## Step 12: Give the admin access to the consent APIs
+
+In the Identity Server Console at `https://localhost:9446/console`:
+
+1. Go to **API Resources** → **New API Resource**. Set **Identifier** and **Display Name** to
+   `OB-internal-api-resource`, add the scope `ob-internal-api-access`, and keep
+   **Requires authorization** on.
+2. Go to **User Management** → **Roles** → **New Role**. Name it `OBInternalApiAccessRole`, give it
+   the `ob-internal-api-access` permission from `OB-internal-api-resource`, and assign the user
+   `is_admin@wso2.com`.
+
+## Step 13: Onboard the client application
 
 Now act as the client application's developer. Each request below needs approval. After each one,
 sign in to the Admin Portal (`https://localhost:9443/admin`) as the bank admin and approve it under
@@ -437,7 +477,7 @@ sign in to the Admin Portal (`https://localhost:9443/admin`) as the bank admin a
    Click **Generate Keys**. Approve it under **Tasks** → **Application Registration**.
 5. Copy the **Consumer Key**. This is the client application's `client_id`.
 
-## Step 13: Let the client application use the RAR types
+## Step 14: Let the client application use the RAR types
 
 1. Find the client application's ID in Identity Server. Sign in to the Console at
    `https://localhost:9446/console`, open the client application, and copy the ID from the URL.
@@ -451,7 +491,7 @@ sign in to the Admin Portal (`https://localhost:9443/admin`) as the bank admin a
    APP_ID=<application-id> ./authorize-app.sh authorize
    ```
 
-## Step 14: Call the APIs
+## Step 15: Call the APIs
 
 1. **Create a customer.** In the Identity Server Console, go to **User Management** →
    **Users** → **Add User**. You sign in as this user to approve consents.
@@ -465,7 +505,7 @@ sign in to the Admin Portal (`https://localhost:9443/admin`) as the bank admin a
 
    | Variable | Value |
    |---|---|
-   | `client_id` | The Consumer Key from step 12 |
+   | `client_id` | The Consumer Key from step 13 |
    | `kid` | `client-signing-key` |
    | `jwk` | The contents of `jwk.json` from step 4 |
    | `pmlib_code` | The contents of [this JWT signing library](https://joolfe.github.io/postman-util-lib/dist/bundle.js) |
