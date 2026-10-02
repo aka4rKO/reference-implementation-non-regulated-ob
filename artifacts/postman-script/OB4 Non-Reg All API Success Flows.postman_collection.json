@@ -7,10 +7,10 @@
   },
   "item": [
     {
-      "name": "0. Client Credentials Token",
+      "name": "00. Client Credentials Token",
       "item": [
         {
-          "name": "1. Client Credentials Token",
+          "name": "01. Client Credentials Token",
           "event": [
             {
               "listen": "prerequest",
@@ -29,11 +29,11 @@
                   "const ob_jwk = JSON.parse(pm.collectionVariables.get('jwk'));",
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
-                  "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -120,10 +120,10 @@
       "description": "Run this once to obtain a client-credentials access token ({{client_credentials_token}}), used by any endpoint marked ClientOAuth2Security - the payment status reads (GET .../{id}) and the consent DELETE."
     },
     {
-      "name": "1. Accounts",
+      "name": "01. Accounts",
       "item": [
         {
-          "name": "1. PAR - Account Information Consent",
+          "name": "01. PAR - Account Information Consent",
           "event": [
             {
               "listen": "prerequest",
@@ -143,11 +143,12 @@
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
                   "const redirectUri = pm.collectionVariables.get('redirect_uri');",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -281,7 +282,7 @@
           "response": []
         },
         {
-          "name": "2. Authorize (manual consent) - copy code into accounts_code",
+          "name": "02. Authorize (manual consent) - copy code into accounts_code",
           "event": [
             {
               "listen": "prerequest",
@@ -326,7 +327,7 @@
           "response": []
         },
         {
-          "name": "3. Token Exchange",
+          "name": "03. Token Exchange",
           "event": [
             {
               "listen": "prerequest",
@@ -345,11 +346,11 @@
                   "const ob_jwk = JSON.parse(pm.collectionVariables.get('jwk'));",
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
-                  "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -475,7 +476,7 @@
           "response": []
         },
         {
-          "name": "4. GET /accounts",
+          "name": "04. GET /accounts",
           "request": {
             "auth": {
               "type": "bearer",
@@ -527,7 +528,7 @@
           ]
         },
         {
-          "name": "5. GET /accounts/{AccountId}",
+          "name": "05. GET /accounts/{AccountId}",
           "request": {
             "auth": {
               "type": "bearer",
@@ -560,7 +561,7 @@
           "response": []
         },
         {
-          "name": "6. GET /accounts/{AccountId}/balances",
+          "name": "06. GET /accounts/{AccountId}/balances",
           "request": {
             "auth": {
               "type": "bearer",
@@ -594,7 +595,7 @@
           "response": []
         },
         {
-          "name": "7. GET /accounts/{AccountId}/transactions",
+          "name": "07. GET /accounts/{AccountId}/transactions",
           "request": {
             "auth": {
               "type": "bearer",
@@ -628,7 +629,7 @@
           "response": []
         },
         {
-          "name": "8. GET /balances",
+          "name": "08. GET /balances",
           "request": {
             "auth": {
               "type": "bearer",
@@ -660,7 +661,7 @@
           "response": []
         },
         {
-          "name": "9. GET /transactions",
+          "name": "09. GET /transactions",
           "request": {
             "auth": {
               "type": "bearer",
@@ -746,10 +747,10 @@
       "description": "GET /accounts, /accounts/{AccountId}, /accounts/{AccountId}/balances, /accounts/{AccountId}/transactions, /balances, /transactions, then DELETE /consents/{ConsentId} last - it revokes the consent the GETs rely on."
     },
     {
-      "name": "2. Domestic Payment",
+      "name": "02. Domestic Payment",
       "item": [
         {
-          "name": "1. PAR - Domestic Payment Consent",
+          "name": "01. PAR - Domestic Payment Consent",
           "event": [
             {
               "listen": "prerequest",
@@ -769,11 +770,12 @@
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
                   "const redirectUri = pm.collectionVariables.get('redirect_uri');",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -895,7 +897,7 @@
           "response": []
         },
         {
-          "name": "2. Authorize (manual consent) - copy code into domestic_payment_code",
+          "name": "02. Authorize (manual consent) - copy code into domestic_payment_code",
           "event": [
             {
               "listen": "prerequest",
@@ -940,7 +942,7 @@
           "response": []
         },
         {
-          "name": "3. Token Exchange",
+          "name": "03. Token Exchange",
           "event": [
             {
               "listen": "prerequest",
@@ -959,11 +961,11 @@
                   "const ob_jwk = JSON.parse(pm.collectionVariables.get('jwk'));",
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
-                  "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -1089,7 +1091,7 @@
           "response": []
         },
         {
-          "name": "4. POST /domestic-payments",
+          "name": "04. POST /domestic-payments",
           "request": {
             "auth": {
               "type": "bearer",
@@ -1163,7 +1165,7 @@
           ]
         },
         {
-          "name": "5. GET /domestic-payments/{DomesticPaymentId}",
+          "name": "05. GET /domestic-payments/{DomesticPaymentId}",
           "request": {
             "auth": {
               "type": "bearer",
@@ -1199,10 +1201,10 @@
       "description": "POST /domestic-payments, GET by id."
     },
     {
-      "name": "3. Domestic Scheduled Payment",
+      "name": "03. Domestic Scheduled Payment",
       "item": [
         {
-          "name": "1. PAR - Domestic Scheduled Payment Consent",
+          "name": "01. PAR - Domestic Scheduled Payment Consent",
           "event": [
             {
               "listen": "prerequest",
@@ -1222,11 +1224,12 @@
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
                   "const redirectUri = pm.collectionVariables.get('redirect_uri');",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -1360,7 +1363,7 @@
           "response": []
         },
         {
-          "name": "2. Authorize (manual consent) - copy code into domestic_scheduled_payment_code",
+          "name": "02. Authorize (manual consent) - copy code into domestic_scheduled_payment_code",
           "event": [
             {
               "listen": "prerequest",
@@ -1405,7 +1408,7 @@
           "response": []
         },
         {
-          "name": "3. Token Exchange",
+          "name": "03. Token Exchange",
           "event": [
             {
               "listen": "prerequest",
@@ -1424,11 +1427,11 @@
                   "const ob_jwk = JSON.parse(pm.collectionVariables.get('jwk'));",
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
-                  "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -1554,7 +1557,7 @@
           "response": []
         },
         {
-          "name": "4. POST /domestic-scheduled-payments",
+          "name": "04. POST /domestic-scheduled-payments",
           "request": {
             "auth": {
               "type": "bearer",
@@ -1628,7 +1631,7 @@
           ]
         },
         {
-          "name": "5. GET /domestic-scheduled-payments/{DomesticScheduledPaymentId}",
+          "name": "05. GET /domestic-scheduled-payments/{DomesticScheduledPaymentId}",
           "request": {
             "auth": {
               "type": "bearer",
@@ -1664,10 +1667,10 @@
       "description": "POST /domestic-scheduled-payments + GET by id."
     },
     {
-      "name": "4. Domestic Standing Order",
+      "name": "04. Domestic Standing Order",
       "item": [
         {
-          "name": "1. PAR - Domestic Standing Order Consent",
+          "name": "01. PAR - Domestic Standing Order Consent",
           "event": [
             {
               "listen": "prerequest",
@@ -1687,11 +1690,12 @@
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
                   "const redirectUri = pm.collectionVariables.get('redirect_uri');",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -1829,7 +1833,7 @@
           "response": []
         },
         {
-          "name": "2. Authorize (manual consent) - copy code into domestic_standing_order_code",
+          "name": "02. Authorize (manual consent) - copy code into domestic_standing_order_code",
           "event": [
             {
               "listen": "prerequest",
@@ -1874,7 +1878,7 @@
           "response": []
         },
         {
-          "name": "3. Token Exchange",
+          "name": "03. Token Exchange",
           "event": [
             {
               "listen": "prerequest",
@@ -1893,11 +1897,11 @@
                   "const ob_jwk = JSON.parse(pm.collectionVariables.get('jwk'));",
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
-                  "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -2023,7 +2027,7 @@
           "response": []
         },
         {
-          "name": "4. POST /domestic-standing-orders",
+          "name": "04. POST /domestic-standing-orders",
           "request": {
             "auth": {
               "type": "bearer",
@@ -2097,7 +2101,7 @@
           ]
         },
         {
-          "name": "5. GET /domestic-standing-orders/{DomesticStandingOrderId}",
+          "name": "05. GET /domestic-standing-orders/{DomesticStandingOrderId}",
           "request": {
             "auth": {
               "type": "bearer",
@@ -2133,10 +2137,10 @@
       "description": "POST /domestic-standing-orders + GET by id."
     },
     {
-      "name": "5. International Payment",
+      "name": "05. International Payment",
       "item": [
         {
-          "name": "1. PAR - International Payment Consent",
+          "name": "01. PAR - International Payment Consent",
           "event": [
             {
               "listen": "prerequest",
@@ -2156,11 +2160,12 @@
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
                   "const redirectUri = pm.collectionVariables.get('redirect_uri');",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -2282,7 +2287,7 @@
           "response": []
         },
         {
-          "name": "2. Authorize (manual consent) - copy code into international_payment_code",
+          "name": "02. Authorize (manual consent) - copy code into international_payment_code",
           "event": [
             {
               "listen": "prerequest",
@@ -2327,7 +2332,7 @@
           "response": []
         },
         {
-          "name": "3. Token Exchange",
+          "name": "03. Token Exchange",
           "event": [
             {
               "listen": "prerequest",
@@ -2346,11 +2351,11 @@
                   "const ob_jwk = JSON.parse(pm.collectionVariables.get('jwk'));",
                   "",
                   "const clientId = pm.collectionVariables.get('client_id');",
-                  "const tokenEndpoint = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/token';",
+                  "const issuer = 'https://' + pm.collectionVariables.get('is_host') + ':' + pm.collectionVariables.get('is_port') + '/oauth2/oidcdiscovery';",
                   "",
                   "var client_assertion = {",
                   "  \"sub\": clientId,",
-                  "  \"aud\": tokenEndpoint,",
+                  "  \"aud\": issuer,",
                   "  \"iss\": clientId,",
                   "  \"exp\": expirationTimeSeconds,",
                   "  \"iat\": issuedAtTimeSeconds,",
@@ -2476,7 +2481,7 @@
           "response": []
         },
         {
-          "name": "4. POST /international-payments",
+          "name": "04. POST /international-payments",
           "request": {
             "auth": {
               "type": "bearer",
@@ -2550,7 +2555,7 @@
           ]
         },
         {
-          "name": "5. GET /international-payments/{InternationalPaymentId}",
+          "name": "05. GET /international-payments/{InternationalPaymentId}",
           "request": {
             "auth": {
               "type": "bearer",
