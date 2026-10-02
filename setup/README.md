@@ -3,10 +3,6 @@
 These scripts do everything in [TRYOUT.md](../TRYOUT.md) up to calling the APIs. When they finish,
 you import the generated Postman collection and run it.
 
-With Claude Code, ask it to **set up this repo**. It runs the
-[`ob-setup` skill](../.claude/skills/ob-setup/SKILL.md), which asks for the inputs and runs the
-phases below. Without it, follow this page.
-
 ## Before you start
 
 You need:
@@ -43,9 +39,9 @@ Every phase can be run again on its own, for example `setup/setup.sh deploy`. Us
 | `deploy` | Webapps, error formatter, approval workflow, `deployment.toml` changes | 5, 6, 9 |
 | `start` | JWKS server, Identity Server, API Manager | 7 |
 | `configure-apim` | Key manager, policies, both APIs published | 8, 10 |
-| `register-rar` | RAR types in Identity Server | 11 |
-| `onboard` | Developer sign-up, client application, subscriptions, keys, RAR authorization, customer | 12, 13, 14 |
-| `postman` | Configured Postman collection | 14 |
+| `register-rar` | RAR types in Identity Server, admin access to the consent APIs | 11, 12 |
+| `onboard` | Developer sign-up, client application, subscriptions, keys, RAR authorization, customer | 13, 14, 15 |
+| `postman` | Configured Postman collection | 15 |
 
 ## Then, in Postman
 
@@ -53,7 +49,7 @@ Every phase can be run again on its own, for example `setup/setup.sh deploy`. Us
 2. **Settings** → **General**: turn off **SSL certificate verification**.
 3. **Settings** → **Certificates**: add `setup/.state/client/transport.pem` and `transport.key` for
    `localhost:9446` and `localhost:8243`.
-4. Run folder `0`, then each other folder in order. In the Authorize step, sign in as the customer
+4. Run folder `00` once, then each other folder in order. In the Authorize step, sign in as the customer
    (`CUSTOMER_USERNAME` / `CUSTOMER_PASSWORD` in `setup.env`).
 
 ## Files
@@ -68,5 +64,3 @@ Every phase can be run again on its own, for example `setup/setup.sh deploy`. Us
 | `lib/wso2.py` | REST calls for the key manager, policies, APIs, onboarding and Postman |
 | `templates/` | Policy definitions and `deployment.toml` blocks |
 | `.state/` | Generated keys, IDs and the Postman collection (git-ignored) |
-
-If something fails, see the skill's [troubleshooting guide](../.claude/skills/ob-setup/troubleshooting.md).

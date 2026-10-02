@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Phase 8: register the RAR types in Identity Server. (TRYOUT step 11)
+# Phase 8: register the RAR types in Identity Server, and give the IS admin access to the
+# consent APIs. (TRYOUT steps 11 and 12)
 #
 . "$(dirname "$0")/../lib/common.sh"
 load_config
@@ -23,3 +24,8 @@ else
   registered || die "The RAR types don't show up in Identity Server's discovery endpoint."
   ok "RAR types registered"
 fi
+
+# The consent page calls the consent APIs as the IS admin; their access rule needs a scope that
+# only a role can grant.
+log "Giving the Identity Server admin access to the consent APIs"
+py wso2.py consent-access

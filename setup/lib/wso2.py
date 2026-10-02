@@ -2,12 +2,13 @@
 """
 REST calls against API Manager 4.7 and Identity Server 7.3, used by the setup phases.
 
-  wso2.py key-manager   add the fsKeyManager key manager and disable the Resident Key Manager
-  wso2.py policies      add the accelerator's MTLS, Consent Enforcement and Dynamic Endpoint policies
-  wso2.py apis          import, wire up, deploy and publish both APIs
-  wso2.py onboard       sign up the developer, create the client application, subscribe, generate
-                        keys (approving each request), and create the customer
-  wso2.py postman       write a Postman collection with the client application's values filled in
+  wso2.py key-manager     add the fsKeyManager key manager
+  wso2.py policies        add the accelerator's MTLS, Consent Enforcement and Dynamic Endpoint policies
+  wso2.py apis            import, wire up, deploy and publish both APIs
+  wso2.py consent-access  give the IS admin the scope the consent APIs need
+  wso2.py onboard         sign up the developer, create the client application, subscribe, generate
+                          keys (approving each request), and create the customer
+  wso2.py postman         write a Postman collection with the client application's values filled in
 
 Every command reads its settings from the environment (see setup.env and lib/common.sh) and is
 safe to run again: it skips anything that already exists.
@@ -171,9 +172,17 @@ def rest_client():
 
 
 def token(username, password, scopes):
+    form = {"grant_type": "password", "username": username, "password": password, "scope": scopes}
     cid, secret = rest_client()
-    res = call("POST", f"{APIM}/oauth2/token", auth=basic(cid, secret),
-               form={"grant_type": "password", "username": username, "password": password, "scope": scopes})
+    try:
+        res = call("POST", f"{APIM}/oauth2/token", auth=basic(cid, secret), form=form)
+    except HttpError as e:
+        if e.status not in (400, 401) or "invalid_client" not in e.body:
+            raise
+        # The saved client is no longer valid: register a new one and try again.
+        save_state(rest_client_id=None, rest_client_secret=None)
+        cid, secret = rest_client()
+        res = call("POST", f"{APIM}/oauth2/token", auth=basic(cid, secret), form=form)
     return "Bearer " + res["access_token"]
 
 
@@ -193,13 +202,35 @@ def is_admin():
 # Key manager
 # --------------------------------------------------------------------------------------------
 
+def is_discovery():
+    """Identity Server's issuer and supported grant types, from its discovery document."""
+    res = call("GET", f"{IS}/oauth2/token/.well-known/openid-configuration")
+    issuer, grants = res.get("issuer"), res.get("grant_types_supported") or []
+    if not issuer or not grants:
+        sys.exit("Identity Server's discovery document has no issuer or grant_types_supported.")
+    return issuer, grants
+
+
 def cmd_key_manager():
     auth = admin_token()
     name = E.get("KEY_MANAGER_NAME", "FSKM")
     existing = call("GET", f"{ADMIN}/key-managers", auth=auth).get("list", [])
+    issuer, grants = is_discovery()
 
-    if any(km["name"] == name for km in existing):
+    km = next((k for k in existing if k["name"] == name), None)
+    if km:
         done(f"Key manager '{name}' already exists")
+        full = call("GET", f"{ADMIN}/key-managers/{km['id']}", auth=auth)
+        changed = []
+        if full.get("issuer") != issuer:
+            full["issuer"] = issuer
+            changed.append(f"issuer {issuer}")
+        if sorted(full.get("availableGrantTypes") or []) != sorted(grants):
+            full["availableGrantTypes"] = grants
+            changed.append(f"all {len(grants)} Identity Server grant types")
+        if changed:
+            call("PUT", f"{ADMIN}/key-managers/{km['id']}", auth=auth, json_body=full)
+            done(f"Key manager '{name}' updated: " + ", ".join(changed))
     else:
         log(f"Adding key manager '{name}' (fsKeyManager)")
         body = {
@@ -209,7 +240,7 @@ def cmd_key_manager():
             "description": "Identity Server 7.3 with the Financial Services accelerator",
             "enabled": True,
             "wellKnownEndpoint": f"{IS}/oauth2/token/.well-known/openid-configuration",
-            "issuer": f"{IS}/oauth2/token",
+            "issuer": issuer,
             "clientRegistrationEndpoint": f"{IS}/api/identity/oauth2/dcr/v1.1/register",
             "introspectionEndpoint": f"{IS}/oauth2/introspect",
             "tokenEndpoint": f"{IS}/oauth2/token",
@@ -220,10 +251,7 @@ def cmd_key_manager():
             "authorizeEndpoint": f"{IS}/oauth2/authorize",
             "scopeManagementEndpoint": f"{IS}/api/identity/oauth2/v1.0/scopes",
             "certificates": {"type": "JWKS", "value": f"{IS}/oauth2/jwks"},
-            "availableGrantTypes": [
-                "client_credentials", "refresh_token", "authorization_code",
-                "urn:ietf:params:oauth:grant-type:jwt-bearer",
-            ],
+            "availableGrantTypes": grants,
             "enableTokenGeneration": True,
             "enableMapOAuthConsumerApps": True,
             "enableOAuthAppCreation": True,
@@ -243,13 +271,6 @@ def cmd_key_manager():
         }
         call("POST", f"{ADMIN}/key-managers", auth=auth, json_body=body)
         done(f"Added key manager '{name}'")
-
-    for km in existing:
-        if km["name"] == "Resident Key Manager" and km.get("enabled"):
-            full = call("GET", f"{ADMIN}/key-managers/{km['id']}", auth=auth)
-            full["enabled"] = False
-            call("PUT", f"{ADMIN}/key-managers/{km['id']}", auth=auth, json_body=full)
-            done("Disabled the Resident Key Manager")
 
 
 # --------------------------------------------------------------------------------------------
@@ -347,7 +368,8 @@ def cmd_apis():
         if api is None:
             log(f"Importing {spec['name']}")
             props = {"name": spec["name"], "version": spec["version"], "context": spec["context"],
-                     "policies": ["Unlimited"], "endpointConfig": dynamic_endpoint}
+                     "policies": ["Unlimited"], "endpointConfig": dynamic_endpoint,
+                     "keyManagers": ["all"]}
             with open(spec_path, "rb") as f:
                 content = f.read()
             api = call("POST", f"{PUBLISHER}/apis/import-openapi", auth=auth, files={
@@ -383,8 +405,9 @@ def cmd_apis():
                               "response": [], "fault": []}
         api["endpointConfig"] = dynamic_endpoint
         api["policies"] = api.get("policies") or ["Unlimited"]
+        api["enableSchemaValidation"] = True
         call("PUT", f"{PUBLISHER}/apis/{api['id']}", auth=auth, json_body=api)
-        done(f"{spec['name']}: dynamic endpoint and policies set")
+        done(f"{spec['name']}: dynamic endpoint, policies and schema validation set")
 
         rev = call("POST", f"{PUBLISHER}/apis/{api['id']}/revisions", auth=auth,
                    json_body={"description": "Created by setup"})
@@ -467,6 +490,17 @@ def wait_for(fn, what, seconds=90):
     sys.exit(f"Timed out waiting for {what}")
 
 
+def application_properties(dev, km_name):
+    """The key manager's client application fields with their defaults, plus the JWKS URI."""
+    res = call("GET", f"{DEVPORTAL}/key-managers", auth=dev)
+    km = next((k for k in res.get("list", []) if k["name"] == km_name), None)
+    if km is None:
+        sys.exit(f"Key manager '{km_name}' is not visible in the Developer Portal.")
+    props = {c["name"]: c.get("default") or "" for c in km.get("applicationConfiguration", [])}
+    props["jwks_uri"] = E["JWKS_URL"]
+    return props
+
+
 def cmd_onboard():
     sign_up_developer()
     dev = developer_token()
@@ -511,12 +545,13 @@ def cmd_onboard():
     key = consumer_key()
     if key is None:
         log("Generating production keys")
+        km_name = E.get("KEY_MANAGER_NAME", "FSKM")
         call("POST", f"{DEVPORTAL}/applications/{app_id}/generate-keys", auth=dev, json_body={
             "keyType": "PRODUCTION",
-            "keyManager": E.get("KEY_MANAGER_NAME", "FSKM"),
+            "keyManager": km_name,
             "grantTypesToBeSupported": ["authorization_code", "client_credentials", "refresh_token"],
             "callbackUrl": E["CALLBACK_URL"],
-            "additionalProperties": {"jwks_uri": E["JWKS_URL"]},
+            "additionalProperties": application_properties(dev, km_name),
         })
         approve_pending("APPLICATION_REGISTRATION_PRODUCTION")
     key = wait_for(lambda: (k := consumer_key()) and k.get("consumerKey") and k, "the production keys")
@@ -552,6 +587,69 @@ def create_customer():
             done(f"Customer '{user}' already exists")
         else:
             raise
+
+
+# --------------------------------------------------------------------------------------------
+# Consent API access
+# --------------------------------------------------------------------------------------------
+
+CONSENT_API_RESOURCE = "OB-internal-api-resource"
+CONSENT_API_SCOPE = "ob-internal-api-access"
+CONSENT_API_ROLE = "OBInternalApiAccessRole"
+SCIM = {"Content-Type": "application/scim+json"}
+
+
+def cmd_consent_access():
+    """Give the IS admin the consent APIs' scope, through an API resource and a role."""
+    auth = is_admin()
+    quote = urllib.parse.quote
+
+    res = call("GET", f"{IS}/api/server/v1/api-resources?filter="
+               + quote(f"identifier eq {CONSENT_API_RESOURCE}"), auth=auth)
+    if res.get("apiResources"):
+        done(f"API resource '{CONSENT_API_RESOURCE}' already exists")
+    else:
+        call("POST", f"{IS}/api/server/v1/api-resources", auth=auth, json_body={
+            "identifier": CONSENT_API_RESOURCE, "name": CONSENT_API_RESOURCE,
+            "requiresAuthorization": True,
+            "scopes": [{"name": CONSENT_API_SCOPE, "displayName": CONSENT_API_SCOPE,
+                        "description": "Call the Financial Services accelerator's consent APIs"}],
+        })
+        done(f"Added API resource '{CONSENT_API_RESOURCE}' with scope '{CONSENT_API_SCOPE}'")
+
+    admin = E["IS_ADMIN_USERNAME"]
+    users = call("GET", f"{IS}/scim2/Users?filter=" + quote(f'userName eq "{admin}"'),
+                 auth=auth).get("Resources", [])
+    if not users:
+        sys.exit(f"Identity Server has no user '{admin}'")
+    admin_id = users[0]["id"]
+
+    roles = call("GET", f"{IS}/scim2/v2/Roles?filter=" + quote(f"displayName eq {CONSENT_API_ROLE}"),
+                 auth=auth).get("Resources", [])
+    if not roles:
+        call("POST", f"{IS}/scim2/v2/Roles", auth=auth, headers=SCIM, json_body={
+            "schemas": ["urn:ietf:params:scim:schemas:extension:2.0:Role"],
+            "displayName": CONSENT_API_ROLE,
+            "permissions": [{"value": CONSENT_API_SCOPE}],
+            "users": [{"value": admin_id}],
+        })
+        done(f"Added role '{CONSENT_API_ROLE}' with '{CONSENT_API_SCOPE}', assigned to '{admin}'")
+        return
+
+    role = call("GET", f"{IS}/scim2/v2/Roles/{roles[0]['id']}", auth=auth)
+    if CONSENT_API_SCOPE not in [p.get("value") for p in role.get("permissions", [])]:
+        call("PATCH", f"{IS}/scim2/v2/Roles/{role['id']}", auth=auth, headers=SCIM, json_body={
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [{"op": "add", "path": "permissions", "value": [{"value": CONSENT_API_SCOPE}]}],
+        })
+        done(f"Added '{CONSENT_API_SCOPE}' to role '{CONSENT_API_ROLE}'")
+    if admin_id not in [u.get("value") for u in role.get("users", [])]:
+        call("PATCH", f"{IS}/scim2/v2/Roles/{role['id']}/Users", auth=auth, headers=SCIM, json_body={
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+            "Operations": [{"op": "add", "path": "users", "value": [{"value": admin_id}]}],
+        })
+        done(f"Assigned '{admin}' to role '{CONSENT_API_ROLE}'")
+    done(f"'{admin}' can call the consent APIs (role '{CONSENT_API_ROLE}')")
 
 
 # --------------------------------------------------------------------------------------------
@@ -609,6 +707,7 @@ COMMANDS = {
     "policies": cmd_policies,
     "apis": cmd_apis,
     "onboard": cmd_onboard,
+    "consent-access": cmd_consent_access,
     "postman": cmd_postman,
 }
 

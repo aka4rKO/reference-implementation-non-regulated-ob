@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Phase 9: onboard the client application and let it use the RAR types. Each request is approved
-# as the bank admin. Also creates the customer. (TRYOUT steps 12, 13 and 14.1)
+# as the bank admin. Also creates the customer. (TRYOUT steps 13, 14 and 15.1)
 #
 . "$(dirname "$0")/../lib/common.sh"
 load_config

@@ -31,9 +31,20 @@ ok "Service extension deployed to Identity Server, demo bank backend to API Mana
 
 # ---- Error formatter and approval workflow -------------------------------------------------
 
-cp "$REPO_DIR/artifacts/custom-synapse-error-formatter/customErrorFormatter.xml" \
-   "$APIM_HOME/repository/deployment/server/synapse-configs/default/sequences/"
+SEQUENCES="$APIM_HOME/repository/deployment/server/synapse-configs/default/sequences"
+cp "$REPO_DIR/artifacts/custom-synapse-error-formatter/customErrorFormatter.xml" "$SEQUENCES/"
 ok "Error formatter copied to the gateway's sequences"
+python3 - "$SEQUENCES/_cors_request_handler_.xml" <<'EOF'
+import sys
+path = sys.argv[1]
+text = open(path).read()
+call = '<sequence key="customErrorFormatter"/>'
+if call not in text:
+    end = text.rindex("</sequence>")
+    text = text[:end] + "   " + call + "\n" + text[end:]
+    open(path, "w").write(text)
+EOF
+ok "Error formatter called from _cors_request_handler_.xml"
 
 # API Manager copies this file into its registry the first time it starts with an empty
 # database. configure.sh creates empty databases, so replacing it here turns approval on.
@@ -93,6 +104,11 @@ edit toml-set "$IS_TOML" oauth.mutualtls client_certificate_header '"x-wso2-mtls
 edit toml-set "$IS_TOML" transport.https.sslHostConfig.properties ciphers \
   '"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"'
 append_tpl "$IS_TOML" "[myaccount.idp_configs]" is-fapi-idp-configs.toml
+
+# 5. Basic auth: allow it only on the endpoints that need it
+edit toml-set "$IS_TOML" compatibility_setting.basic_auth.disable_basic_auth default_value '"true"'
+edit toml-set "$IS_TOML" compatibility_setting.basic_auth.allowed_endpoints default_value \
+  '"(/t/[^/]+)?/api/fs/consent/.*, (/t/[^/]+)?/non/regulated/ob/service/extension/.*, (/t/[^/]+)?/api/identity/oauth2/dcr/v1[.]1/register.*, (/t/[^/]+)?/api/identity/oauth2/v1[.]0/scopes.*, (/t/[^/]+)?/api/server/v1/applications.*, (/t/[^/]+)?/api/server/v1/api-resources.*, (/t/[^/]+)?/scim2/users.*, (/t/[^/]+)?/scim2/v2/roles.*, (/t/[^/]+)?/oauth2/introspect"'
 ok "Identity Server deployment.toml updated (original kept as deployment.toml.orig)"
 
 # ---- API Manager deployment.toml -----------------------------------------------------------
