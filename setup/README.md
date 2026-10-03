@@ -18,11 +18,15 @@ You need:
 ```bash
 cp setup/setup.env.example setup/setup.env   # then fill it in
 setup/setup.sh extract
-setup/setup.sh update                        # asks for your WSO2 login; skip if you have none
+setup/setup.sh update                        # asks for your WSO2 login; required (see below)
 setup/setup.sh accelerators certs deploy start configure-apim register-rar onboard postman
 ```
 
 `setup/setup.sh all` runs every phase except `update`.
+
+`update` needs a WSO2 subscription. It's required for these product versions: the accelerator zips
+only have the `deployment.toml` templates up to API Manager 4.5.0 and Identity Server 7.1.0, and the
+updates add the 4.7.0 and 7.3.0 ones. Without them, `accelerators` stops.
 
 > `accelerators` **drops and recreates** the MySQL databases whose names start with `DB_PREFIX`
 > (default `nonreg_ob_`), and `certs` replaces both servers' keys.
@@ -61,6 +65,6 @@ Every phase can be run again on its own, for example `setup/setup.sh deploy`. Us
 | `lib/common.sh` | Config loading and shared helpers |
 | `lib/edit.py` | Idempotent edits to `configure.properties` and `deployment.toml` |
 | `lib/jwk.py` | Turns the signing key into a JWK and JWKS |
-| `lib/wso2.py` | REST calls for the key manager, policies, APIs, onboarding and Postman |
+| `lib/wso2.py` | REST calls for the key manager, policies, APIs, consent API access, onboarding and Postman |
 | `templates/` | Policy definitions and `deployment.toml` blocks |
 | `.state/` | Generated keys, IDs and the Postman collection (git-ignored) |

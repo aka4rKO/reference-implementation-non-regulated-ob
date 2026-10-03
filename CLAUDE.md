@@ -11,7 +11,7 @@ Target products: WSO2 API Manager 4.7.0, WSO2 Identity Server 7.3.0, and the WSO
 ## Docs and terminology
 
 - `README.md`: what the repo is, the actors, the artifacts and code, and the client application settings.
-- `TRYOUT.md`: the manual, step-by-step setup (14 steps) ending with calling the APIs in Postman.
+- `TRYOUT.md`: the manual, step-by-step setup (15 steps) ending with calling the APIs in Postman.
 - `setup/README.md`: the automated setup.
 
 Use the repo's terms in all docs: **customer** (owns the accounts, approves consents), **client application** (the third-party app calling the APIs), **the client application's developer** (signs up in the Developer Portal and creates the app), **bank**, **bank admin** (approves requests in the APIM Admin Portal), **user token** (authorization code, tied to a consent) and **client token** (client credentials). Don't use "TPP". The README's Actors table lists the synonyms from other standards.
@@ -57,17 +57,17 @@ A mock bank core (CXF webapp) that knows nothing about consents. It has three se
 - `rar-schemas/`: JSON Schema (Draft 2020-12) for each RAR type, plus `scripts/register.sh` / `authorize-app.sh` (need `jq` and `curl`; `IS_HOST`, `IS_AUTH` and `APP_ID` env vars; `print` mode is a dry run). These register the types in WSO2 IS 7.3. See `artifacts/rar-schemas/scripts/README.md`. The scripts default to `https://localhost:9443` and `admin:admin`; with the accelerator, IS runs on `9446` with `is_admin@wso2.com:wso2123`. If you change a type's shape, keep the schema, `types.json`, the sample authorization details and the Java validators in sync.
 - `devportal-km-configs/am-deployment-snippet.toml`: the client application fields for the APIM Developer Portal. Only the JWKS URI is visible; the rest are hidden FAPI 2.0 defaults (`private_key_jwt`, PS256, PAR, signed request objects, certificate-bound tokens, S256 PKCE). The README documents each one.
 - `workflow-extensions/`: `workflow-extensions.xml` turns on approval for sign-ups, applications, subscriptions and key generation; `default-workflow-extensions.xml` is the original.
-- `custom-synapse-error-formatter/`: a gateway sequence that formats errors as `{Code, Message, Errors}`.
-- `postman-script/`: an end-to-end Postman collection covering all API success flows. It reads its settings from collection variables (`pm.collectionVariables`), not from an environment.
+- `custom-synapse-error-formatter/`: a gateway sequence that formats errors as `{Code, Message, Errors}`. It only runs if the gateway's `_cors_request_handler_.xml` calls it (`<sequence key="customErrorFormatter"/>`); the setup's `deploy` phase adds that call.
+- `postman-script/`: an end-to-end Postman collection covering all API success flows. It reads its settings from collection variables (`pm.collectionVariables`), not from an environment. The scripts also set 15 variables that the collection doesn't declare (each flow's `*_request_uri`, `*_user_token` and `*_consent_id`). Folders and requests are numbered with two digits (`00.`, `01.`) so they sort in run order.
 
-### `setup/` and the `ob-setup` skill
+### `setup/`
 
-`setup/setup.sh <phase>...` (or `all`) automates `TRYOUT.md` end to end. The phases are `extract`, `update` (interactive: needs a WSO2 login, so the user runs it), `accelerators`, `certs`, `deploy`, `start`, `configure-apim`, `register-rar`, `onboard`, `postman`, and `stop`. `.claude/skills/ob-setup/` is the skill that collects the inputs and runs them; its `phases.md` and `troubleshooting.md` describe each phase.
+`setup/setup.sh <phase>...` (or `all`) automates `TRYOUT.md` end to end. The phases are `extract`, `update` (interactive: needs a WSO2 login, so the user runs it), `accelerators`, `certs`, `deploy`, `start`, `configure-apim`, `register-rar`, `onboard`, `postman`, and `stop`. `register-rar` also gives the IS admin access to the consent APIs (`wso2.py consent-access`: the API resource `OB-internal-api-resource` with the scope `ob-internal-api-access`, and the role `OBInternalApiAccessRole`).
 
 - Settings come from `setup/setup.env` (copy of `setup.env.example`). Generated keys, IDs and the configured Postman collection go to `setup/.state/`. Both are git-ignored and hold secrets; never commit them.
-- `lib/common.sh` loads the config and has the shared helpers. `lib/edit.py` makes idempotent, line-based edits to `configure.properties` and `deployment.toml`. `lib/jwk.py` builds the JWK/JWKS with openssl. `lib/wso2.py` makes the REST calls (APIM Admin/Publisher `v4`, Devportal `v3`, IS SCIM2 and application APIs) and uses only the Python standard library.
+- `lib/common.sh` loads the config and has the shared helpers. `lib/edit.py` makes idempotent, line-based edits to `configure.properties` and `deployment.toml`. `lib/jwk.py` builds the JWK/JWKS with openssl. `lib/wso2.py` makes the REST calls (APIM Admin/Publisher `v4`, Devportal `v3`; IS SCIM2 users and roles, applications and API resources) and uses only the Python standard library.
 - Every phase must stay safe to re-run, and must work on macOS's bash 3.2 (`set -u` breaks on empty arrays).
 - The `accelerators` phase runs the accelerator's `configure.sh`, which **drops and recreates** the databases named by `DB_PREFIX` and replaces `deployment.toml`, so `deploy` must run after it.
-- The phases that call running servers (`configure-apim`, `onboard`) haven't been run end to end yet. `troubleshooting.md` lists what to check.
+- Identity Server has basic authentication turned off except on the paths in `[compatibility_setting.basic_auth.allowed_endpoints]`, which `deploy` sets. If something new calls Identity Server with basic auth, add its path there, in `05-deploy.sh` and in `TRYOUT.md` step 6.
 
-When you change how something is set up, change it in all three places: `TRYOUT.md`, the matching `setup/` phase, and the skill's `phases.md`.
+When you change how something is set up, change it in both places: `TRYOUT.md` and the matching `setup/` phase. If TRYOUT's steps are added or renumbered, update the step column of the phase table in `setup/README.md` and the step numbers in the phase scripts' headers.

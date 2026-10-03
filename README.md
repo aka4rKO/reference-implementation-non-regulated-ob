@@ -63,7 +63,7 @@ The client application's developer fills in only these fields when generating ke
 |---|---|
 | JWKS URI | Where Identity Server gets the client application's public keys, to check its signed client assertions and request objects. The snippet adds this field. |
 | Callback URL | Where the customer is sent back to after approving the consent |
-| Grant types | Which tokens the client application can get: authorization code for user tokens, client credentials for client tokens |
+| Grant types | Which tokens the client application can get: authorization code for user tokens, client credentials for client tokens, and refresh token to renew user tokens |
 
 The rest are hidden, so every client application gets the settings recommended by FAPI 2.0 and by this standard:
 

@@ -97,6 +97,13 @@ Once set up, the servers run on these ports:
    ./configure.sh   # writes deployment.toml and creates the databases
    ```
 
+6. Create the event notification tables in the consent database (`DB_FS_STORE` in the `fsiam`
+   `configure.properties`):
+
+   ```bash
+   mysql -u <user> -p -D <consent-database> < <IS_HOME>/dbscripts/financial-services/event-notifications/mysql.sql
+   ```
+
 > Whenever you update an accelerator again, run its `merge.sh` again.
 
 For more detail, see the
@@ -399,7 +406,7 @@ For screenshots and every attribute's display name and description, see
    | Policy | Where | Values |
    |---|---|---|
    | MTLS Enforcement Policy | API level | Leave the attributes empty |
-   | JWT Claim Based Access Validator | Every operation | Claim `aut`. Value `APPLICATION_USER` on user-token operations, `APPLICATION` on client-token operations. |
+   | JWT Claim Based Access Validator | Every operation | Claim `aut`. Value `APPLICATION_USER` on user-token operations, `APPLICATION` on client-token operations. Leave **Allow flow when claims are not matching** unticked. |
    | Consent Enforcement Policy | User-token operations only | See below |
    | Dynamic Endpoint Policy | Every operation, always last | See below |
 
@@ -510,7 +517,7 @@ sign in to the Admin Portal (`https://localhost:9443/admin`) as the bank admin a
    | `jwk` | The contents of `jwk.json` from step 4 |
    | `pmlib_code` | The contents of [this JWT signing library](https://joolfe.github.io/postman-util-lib/dist/bundle.js) |
 
-5. **Run the requests.** Run folder `0` once to get a client token. Then run each other folder's
+5. **Run the requests.** Run folder `00` once to get a client token. Then run each other folder's
    requests in order:
    1. **PAR** sends the consent.
    2. **Authorize** gives you a URL. Open it in a browser, sign in as the customer and approve
